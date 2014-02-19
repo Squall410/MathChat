@@ -45,6 +45,7 @@ chatBase.onConnect = function() {
 	
 	// Setup the functional listeners
 	chatBase.socket.on('welcome', chatBase.onWelcome);
+	chatBase.socket.on('hatUpdate', chatBase.onHatUpdate);
 	chatBase.socket.on('userUpdate', chatBase.onUserUpdate);
 	chatBase.socket.on('receivedAnswer', chatBase.onReceivedAnswer);
 	chatBase.socket.on('newQuestion', chatBase.onNewQuestion);
@@ -58,6 +59,9 @@ chatBase.onConnect = function() {
 chatBase.onWelcome = function(data) {
 	// data:Object
 	// -- user:Object = The user you just created.
+	//	  + name:String
+	//	  + hat:String
+	//	  + points:int
 	console.log("onWelcome: " + data);
 	
 	// Switch to a 'chatroom'
@@ -69,7 +73,41 @@ chatBase.onWelcome = function(data) {
 	
 	// Update the user's name
 	$("#display_name").html( "User: " + data.user.name );
+	if ( data.user.hat != null ) {
+		$("#display_hat").html( '<small>wearing</small> ' + data.user.hat );
+	}
+	
+	chatBase.updateHatButton( data.user.points );
 };
+
+chatBase.updateHatButton = function(points) {
+	points = (points || 0);
+	
+	// This is 5 just because we know the lowest value hat costs that much. Update if that changes.
+	if (points < 5) {
+		$("#hat_input").css("display", "none");
+	}
+	else {
+		$("#hat_input").css("display", "block");
+	}
+};
+
+chatBase.onHatUpdate = function(data) {
+	// data:Object
+	// -- user:Object = The user you just created.
+	//	  + name:String
+	//	  + hat:String
+	//	  + points:int
+	console.log("onHatUpdate: " + data);
+	
+	// Update the user's name
+	$("#display_name").html( "User: " + data.user.name );
+	if ( data.user.hat != null ) {
+		$("#display_hat").html( '<small>wearing</small> ' + data.user.hat );
+	}
+	
+	chatBase.updateHatButton( data.user.points );
+}
 
 chatBase.onUserUpdate = function(data) {
 	// data:Object
@@ -108,6 +146,13 @@ chatBase.submitAnswer = function() {
 	answerField.prop("disabled", true);
 	chatBase.socket.emit('submitAnswer', { answer: attempt });
 };
+chatBase.attemptBuy = function() {
+	console.log( "Attempting to buy a hat!" );
+	
+	// This tells the server to try and buy a fancy hat. If we don't have enough points, then don't allow it.
+	
+	chatBase.socket.emit('attemptBuy', null);
+};
 
 chatBase.onAnswerFound = function(data) {
 	// data:Object
@@ -126,6 +171,7 @@ chatBase.handleError = function() {
 	console.log( "Got an error" );
 	chatBase.socket.removeListener('connect', chatBase.onConnect);
 	chatBase.socket.removeListener('welcome', chatBase.onWelcome);
+	chatBase.socket.removeListener('hatUpdate', chatBase.onHatUpdate);
 	chatBase.socket.removeListener('userUpdate', chatBase.onUserUpdate);
 	chatBase.socket.removeListener('receivedAnswer', chatBase.onReceivedAnswer);
 	chatBase.socket.removeListener('newQuestion', chatBase.onNewQuestion);

@@ -1,0 +1,42 @@
+{
+    "name": "Hats",
+    "version": "1.0",
+    "list": [
+		{
+			"id": "00001",
+			"name": "not-very-good rag cap of math-ing.",
+			"cost": 5,
+			"requires": null
+		},
+		{
+			"id": "00002",
+			"name": "slightly-better rag cap of math-ing.",
+			"cost": 10,
+			"requires": { "00001":1 }
+		},
+		{
+			"id": "00003",
+			"name": "acceptable hat of math-ing.",
+			"cost": 25,
+			"requires": { "00001":1, "00002":1 }
+		},
+		{
+			"id": "00004",
+			"name": "hat of math-ing.",
+			"cost": 40,
+			"requires": { "00003":1 }
+		},
+		{
+			"id": "00005",
+			"name": "pretty-good hat of math-ing.",
+			"cost": 50,
+			"requires": { "00003":1, "00004":1 }
+		},
+		{
+			"id": "00006",
+			"name": "amazing hat of math-ing lore.",
+			"cost": 99,
+			"requires": { "00005":1 }
+		}
+   ]
+}

@@ -1,6 +1,6 @@
 {
     "name": "MathChat",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Chat room with users answering math questions.",
     "dependencies": {
         "socket.io": "latest"

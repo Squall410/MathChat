@@ -20,6 +20,10 @@
 				font-weight: bold;
 				color: #000;
 			}
+			table,th,td
+			{
+				padding:5px;
+			}
 		</style>
 	</head>
 	<body>
@@ -43,7 +47,7 @@
 				<hr/>
 				<form id="name_input" name="name_input" action="" method="get">
 					Username: <input type="text" name="username">
-					<input type="button" value="Submit" onclick="chatBase.connect()">
+					<input id="submit" type="button" value="Submit" onclick="chatBase.connect()">
 				</form>
 				</br>
 				<div id="message_text"></div>
@@ -51,7 +55,17 @@
 			<div id="chatroom" style="display: none;">
 				<p>This is a room!</p>
 				<p>Questions will appear and you can attempt to answer them to earn points!</p>
-				<div id="display_name">User:</div>
+				<table>
+					<tr>
+						<td id="display_name">User:</td>
+						<td id="display_hat"></td>
+						<td>
+							<form id="hat_input" name="hat_input" action="" method="get">
+								<input id="buy_hat" type="button" value="Buy Hat" onclick="chatBase.attemptBuy()">
+							</form>
+						</td>
+					</tr>
+				</table>
 				<hr/>
 				<div id="question_header">Question:</div>
 				<div id="question">Loading...</div>

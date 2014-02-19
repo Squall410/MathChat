@@ -3,6 +3,7 @@ var io = require('socket.io').listen(app);				// The socket.io reference
 var path = require('path');								// Helps with file paths
 var fs = require('fs');									// The filesystem reference
 var questionFile = require('./questions.json');
+var hatFile = require('./hats.json');
 
 app.listen(8335);
 
@@ -47,6 +48,9 @@ var serverStart = function() {
 	// Prime the question system
 	getNewQuestion();
 	
+	// Prime the hat data system
+	primeHatRack();
+	
 	// NOTE:: (JCW) Set the SocketIO listeners to know when a user connects
 	// 			This fires for 'reconnect' events as well.
 	// TODO:: HANDLE RECONNECT EVENTS (have a timeout on disconnect before you remove a user.)
@@ -55,7 +59,7 @@ var serverStart = function() {
 			console.log('newuser');
 			console.log(data);
 			
-			var userData = createNewUser(data);
+			var newUser = createNewUser(data, socket);
 			socket.on('requestUpdate', function() {
 				var htmlList = askForUserUpdate();
 				socket.emit("userUpdate", { userlist: htmlList });
@@ -63,7 +67,7 @@ var serverStart = function() {
 			});
 			socket.on('disconnect', function () {
 				// TODO:: Use a timeout before removal. If the user connects again in that time, keep them alive.
-				removeUser(userData);
+				removeUser(newUser);
 			});
 			socket.on('submitAnswer', function(data) {
 				// data:Object
@@ -72,11 +76,14 @@ var serverStart = function() {
 				
 				socket.emit('receivedAnswer', {});
 				if (currentQ != null && fetchingAnswer === false) {
-					processAnswerAttempt( data.answer, userData );
+					processAnswerAttempt( data.answer, newUser );
 				}
 				
 			});
-			socket.emit('welcome', { user: userData });
+			socket.on('attemptBuy', function() {
+				processHatBuyAttempt( newUser );
+			});
+			socket.emit('welcome', { user: newUser.getUserData() });
 			// If we have a question, send the Q part to the user
 			if (currentQ != null) {
 				socket.emit("newQuestion", { name: currentQ.name, q: currentQ.q });
@@ -90,6 +97,7 @@ var userCount = 0;
 var questionList = [];
 var fetchingAnswer = true;
 var currentQ = null;
+var hatList = null;
 
 // BEGIN:: QUESTION FUNCTIONS
 var getNewQuestion = function() {
@@ -121,7 +129,7 @@ var getNewQuestion = function() {
 	fetchingAnswer = false;
 };
 
-var processAnswerAttempt = function(answer, userData) {
+var processAnswerAttempt = function(answer, theUser) {
 	// If the answer is correct, you must award points to the user that submitted it.
 	// Then refresh all users, invalidate the question they have, pick a new one, and then show it.
 	
@@ -142,11 +150,24 @@ var processAnswerAttempt = function(answer, userData) {
 	// Award the current player points if they answered correctly.
 	if (foundSolution === true) {
 		var addedPoints = (currentQ.val || 1);
-		userData.points += addedPoints;
+		theUser.points += addedPoints;
+		// Cap at 99 rupees, err, points.
+		if (theUser.points > 99) {
+			theUser.points = 99;
+		}
 		// Let everyone know the game is over, and get a new question!
 		fetchingAnswer = true;
 		currentQ = null;
-		io.sockets.emit("answerFound", { name: userData.name, answer: answer, value: addedPoints });
+		
+		// Update the user that got the points. Maybe they can now buy a hat?
+		if (theUser.socket != null) {
+			theUser.socket.emit("hatUpdate", { user: theUser.getUserData() });
+		}
+		
+		// Let everyone know that an answer was found!
+		io.sockets.emit("answerFound", { name: theUser.name, answer: answer, value: addedPoints });
+		
+		// Update all the users to see who has what points.
 		updateUsers();
 		
 		// Wait 2 seconds, and then get a new question for the players
@@ -155,15 +176,107 @@ var processAnswerAttempt = function(answer, userData) {
 };
 // END:: QUESTION FUNCTIONS
 
+// BEGIN:: HAT FUNCTIONS
+var primeHatRack = function() {
+	if ( (typeof hatFile === "undefined") || (hatFile === null) ) {
+		throw new Error( "No hat data file exists! Problem with server!" );
+		return;
+	}
+	hatList = hatFile.list;
+	if( Object.prototype.toString.call( hatList ) !== '[object Array]' ) {
+		throw new Error( "Hat data file list does not exist! Problem with server!" );
+		return;
+	}
+	if ( hatList.length <= 0 ) {
+		throw new Error( "Hat data file list does not exist! Problem with server!" );
+		return;
+	}
+	
+	// Sort the list by decreasing cost in case it isn't already done so.
+	hatList.sort( function(a, b) {
+		return (a.cost || 0) - (b.cost || 0);
+	})
+};
+
+var getHatNameByID = function(hatID) {
+	if (hatID == null || hatID == "") {
+		return null;
+	}
+	
+	var hatIter = 0;
+	var hatCount = hatList.length;
+	var checkedHat = null;
+	for (; hatIter < hatCount; ++hatIter) {
+		checkedHat = hatList[hatIter];
+		if (checkedHat != null && hatID == checkedHat.id) {
+			return checkedHat.name;
+		}
+	}
+	
+	// This hat shouldn't be attainable
+	return "unknown hat of unknowing.";
+};
+
+var processHatBuyAttempt = function(theUser) {
+	// All players want hats, but we must determine if they can BUY a hat.
+	// If a user has enough points to make a purchase, then award them the best hat they can get.
+	
+	var currentPoints = (theUser.points || 0);
+	var currCost = 0;
+	var newHat = null;
+	
+	// Hat's have the following format:
+	// "id": "00004",
+	// "name": "hat of math-ing.",
+	// "cost": 40,
+	// "requires": { "00003":1 }
+	
+	// NOTE:: WE APRIORI KNOW THE LIST IS SORTED IN REVERSE ORDER OF COST!
+	var hatIter = 0;
+	var hatCount = hatList.length;
+	var checkedHat = null;
+	for (; hatIter < hatCount; ++hatIter) {
+		checkedHat = hatList[hatIter];
+		if (checkedHat != null && currentPoints >= checkedHat.cost && theUser.hat != checkedHat.id) {
+			// If we can afford the hat, then check if we meet the requirements it needs.
+			if ( ( checkedHat.requires == null && theUser.hat == null ) ||
+				 ( checkedHat.requires != null && checkedHat.requires[theUser.hat] != null ) ) {
+				currCost = checkedHat.cost;
+				newHat = checkedHat.id;
+			}
+		}
+	}
+	
+	// If the user actually bought a hat, then make sure to emit that they did.
+	if (newHat != null) {
+		// Deduct the points they spent.
+		theUser.points -= currCost;
+		theUser.hat = newHat;
+		
+		if (theUser.socket != null) {
+			theUser.socket.emit("hatUpdate", { user: theUser.getUserData() });
+		}
+		
+		// Let everyone else know how awesome you are...
+		updateUsers();
+	}
+};
+// END:: HAT FUNCTIONS
+
 // BEGIN:: USER FUNCTIONS
-var createNewUser = function(inputData) {
+var createNewUser = function(inputData, socket) {
 	// inputData:Object
 	// - name:String
 	console.log( "createNewUser: " + inputData.name );
 	// Create an empty user
 	var user = {
 		name: inputData.name,
-		points: 0
+		points: 0,
+		hat: null,
+		socket: socket
+	};
+	user.getUserData = function() {
+		return { name: this.name, points: this.points, hat: getHatNameByID(this.hat) };
 	};
 	
 	// Verify if another user exists with that name.
@@ -200,7 +313,11 @@ var askForUserUpdate = function() {
 	var tempUser = null;
 	for ( key in userList ) {
 		tempUser = userList[key];
-		htmlList += tempUser.name + ' <small>(' + tempUser.points + ' points)</small><br/>';
+		htmlList += tempUser.name;
+		if (tempUser.hat !== null) {
+			htmlList += ' <small>wearing</small> ' + getHatNameByID(tempUser.hat);
+		}
+		htmlList += ' <small>(' + tempUser.points + ' points)</small><br/>';
 	}
 	return htmlList;
 };
