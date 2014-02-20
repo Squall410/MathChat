@@ -1,4 +1,4 @@
-DEBUG = true;
+var DEBUG = true;
 
 if (DEBUG !== true) {
 	console = {};
@@ -50,6 +50,7 @@ chatBase.onConnect = function() {
 	chatBase.socket.on('receivedAnswer', chatBase.onReceivedAnswer);
 	chatBase.socket.on('newQuestion', chatBase.onNewQuestion);
 	chatBase.socket.on('answerFound', chatBase.onAnswerFound);
+	chatBase.socket.on('chatUpdate', chatBase.onReceivedChatUpdate);
 	
 	// Tell the server our name
 	chatBase.socket.emit('newuser', { name: chatBase.username });
@@ -122,13 +123,30 @@ chatBase.onReceivedAnswer = function(data) {
 };
 
 chatBase.onNewQuestion = function(data) {
-	// { name: currentQ.name, q: currentQ.q }
+	// data:Object
+	// -- name:String = The name of the question
+	// -- q:String = The question itself
 	$("#question_header").html( "Question: " + data.name );
 	$("#question").html( data.q );
 	
 	var answerField = $("#q_input :input[name='answer']");
 	answerField.prop("disabled", false);
 	answerField.val("");
+};
+
+chatBase.onReceivedChatUpdate = function(data) {
+	// data:Object
+	// - newMessage:String = The message we just got.
+	var chatWindow = $("#chat_window");
+	
+	// Add the new text to the textbox, and scroll properly.
+	var oldChatData = chatWindow.val();
+	if (oldChatData !== "") {
+		oldChatData += "\n";
+	}
+	oldChatData += data.newMessage;
+	chatWindow.val(oldChatData);
+	chatWindow.scrollTop( chatWindow.prop("scrollHeight") );
 };
 
 chatBase.submitAnswer = function() {
@@ -154,6 +172,20 @@ chatBase.attemptBuy = function() {
 	chatBase.socket.emit('attemptBuy', null);
 };
 
+chatBase.sendChat = function() {
+	console.log( "Sending chat data." );
+	
+	// This tells the server what you said so that others may read it.
+	var chatInput = $("#chat_input :input[name='chat']");
+	var newText = chatInput.val();
+	chatInput.val("");
+	
+	// Don't send empty messages
+	if (newText !== null && newText !== "") {
+		chatBase.socket.emit('sendChat', { text: newText });
+	}
+};
+
 chatBase.onAnswerFound = function(data) {
 	// data:Object
 	//	- answer:String = the correct answer
@@ -176,6 +208,7 @@ chatBase.handleError = function() {
 	chatBase.socket.removeListener('receivedAnswer', chatBase.onReceivedAnswer);
 	chatBase.socket.removeListener('newQuestion', chatBase.onNewQuestion);
 	chatBase.socket.removeListener('answerFound', chatBase.onAnswerFound);
+	chatBase.socket.removeListener('chatUpdate', chatBase.onReceivedChatUpdate);
 	chatBase.socket.removeListener('connect_failed', chatBase.handleError);
 	chatBase.socket.removeListener('disconnect', chatBase.handleError);
 	chatBase.socket.removeListener('error', chatBase.handleError);
@@ -185,6 +218,10 @@ chatBase.handleError = function() {
 	chatBase.socket = null;
 	$("#welcome").css("display", "block");
 	$("#chatroom").css("display", "none");
+	
+	// Make sure to wipe chat if we got an error.
+	$("#chat_window").val("");
+	$("#correct_user").val("");
 	
 	var nameField = $("#name_input :input[name='username']");
 	nameField.prop("disabled", false);

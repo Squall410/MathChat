@@ -7,7 +7,7 @@ var hatFile = require('./hats.json');
 
 app.listen(8335);
 
-DEBUG = true;
+var DEBUG = true;
 
 if (DEBUG !== true) {
 	console = {};
@@ -67,7 +67,8 @@ var serverStart = function() {
 			});
 			socket.on('disconnect', function () {
 				// TODO:: Use a timeout before removal. If the user connects again in that time, keep them alive.
-				removeUser(newUser);
+				removeUser( newUser );
+				userLeftRoom( newUser );
 			});
 			socket.on('submitAnswer', function(data) {
 				// data:Object
@@ -83,7 +84,11 @@ var serverStart = function() {
 			socket.on('attemptBuy', function() {
 				processHatBuyAttempt( newUser );
 			});
+			socket.on('sendChat', function(data) {
+				receivedChatText( newUser, data );
+			});
 			socket.emit('welcome', { user: newUser.getUserData() });
+			userEnteredRoom( newUser );
 			// If we have a question, send the Q part to the user
 			if (currentQ != null) {
 				socket.emit("newQuestion", { name: currentQ.name, q: currentQ.q });
@@ -328,6 +333,35 @@ var updateUsers = function() {
 	io.sockets.emit("userUpdate", { userlist: htmlList });
 };
 // END:: USER FUNCTIONS
+
+// BEGIN:: CHAT FUNCTIONS
+var receivedChatText = function( theUser, data ) {
+	// theUser:Object = the user object, with name, points, etc.
+	// data:Object
+	// - text:String = The chat string that was just entered.
+	console.log( "receivedChatText: " + data.text );
+	
+	// NOTE:: Should we filter curse words/log this?
+	
+	// Simply notify all the users of what was heard!
+	var message = theUser.name + ": " + data.text;
+	io.sockets.emit("chatUpdate", { newMessage: message });
+}
+
+var userEnteredRoom = function( theUser ) {
+	// theUser:Object = the user object, with name, points, etc.
+	
+	var message = theUser.name + " entered the room."
+	io.sockets.emit("chatUpdate", { newMessage: message });
+};
+
+var userLeftRoom = function( theUser ) {
+	// theUser:Object = the user object, with name, points, etc.
+	
+	var message = theUser.name + " left the room."
+	io.sockets.emit("chatUpdate", { newMessage: message });
+};
+// END:: CHAT FUNCTIONS
 
 // MUST CALL THIS TO START THE WHOLE SYSTEM
 serverStart();

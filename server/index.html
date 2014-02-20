@@ -20,6 +20,27 @@
 				font-weight: bold;
 				color: #000;
 			}
+			#chat_input {
+				width: 290px;
+				margin: 2px;
+			}
+			#text_input {
+				width: 77%;
+			}
+			#chat_button {
+				width: 20%
+			}
+			#chat_window {
+				width: 290px;
+				height: 250px;
+				margin: 2px;
+				resize: none;
+				overflow: scroll;
+				float:left;
+			}
+			#user_list {
+				margin: 2px;
+			}
 			table,th,td
 			{
 				padding:5px;
@@ -53,8 +74,9 @@
 				<div id="message_text"></div>
 			</div>
 			<div id="chatroom" style="display: none;">
-				<p>This is a room!</p>
+				<p>Welcome to MathChat!</p>
 				<p>Questions will appear and you can attempt to answer them to earn points!</p>
+				<p>Feel free to chat with fellow users as well.</p>
 				<table>
 					<tr>
 						<td id="display_name">User:</td>
@@ -77,6 +99,11 @@
 					<input type="button" value="Submit" onclick="chatBase.submitAnswer()">
 				</form>
 				<hr/>
+				<form id="chat_input" name="chat_input" action="" method="get">
+					<input id="text_input" type="text" name="chat">
+					<input id="chat_button" type="button" value="Chat" onclick="chatBase.sendChat()">
+				</form>
+				<textarea id="chat_window" readonly="readonly"></textarea>
 				<div id="user_list">Users:</div>
 			</div>
 		</div>
