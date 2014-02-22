@@ -52,23 +52,13 @@
 		<script type="text/javascript" src="socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 		<script type="text/javascript" src="./code.js"></script>
-		<script type="text/javascript">
-			// Snippet to prevent the use of the enter key on the username field
-			$(document).on("keypress", 'form', function (e) {
-				var code = e.keyCode || e.which;
-				if (code == 13) {
-					e.preventDefault();
-					return false;
-				}
-			});
-		</script>
 		 <div id="game">
 			<div id="welcome" style="display: none;">
 				<p>Welcome to Math Chat. Please enter a user name to begin.</p>
 				<hr/>
-				<form id="name_input" name="name_input" action="" method="get">
-					Username: <input type="text" name="username">
-					<input id="submit" type="button" value="Submit" onclick="chatBase.connect()">
+				<form id="name_input" name="name_input">
+					Username: <input id="username" type="text" name="username">
+					<input id="submitName" type="button" value="Submit">
 				</form>
 				</br>
 				<div id="message_text"></div>
@@ -82,8 +72,8 @@
 						<td id="display_name">User:</td>
 						<td id="display_hat"></td>
 						<td>
-							<form id="hat_input" name="hat_input" action="" method="get">
-								<input id="buy_hat" type="button" value="Buy Hat" onclick="chatBase.attemptBuy()">
+							<form id="hat_input" name="hat_input">
+								<input id="buy_hat" type="button" value="Buy Hat">
 							</form>
 						</td>
 					</tr>
@@ -94,16 +84,16 @@
 				</br>
 				<div id="correct_user"></div>
 				</br>
-				<form id="q_input" name="q_input" action="" method="get">
-					Answer: <input type="text" name="answer">
-					<input type="button" value="Submit" onclick="chatBase.submitAnswer()">
+				<form id="q_input" name="q_input">
+					Answer: <input id="answer" type="text" name="answer">
+					<input id="submitAnswer" type="button" value="Submit">
 				</form>
 				<hr/>
-				<form id="chat_input" name="chat_input" action="" method="get">
+				<form id="chat_input" name="chat_input">
 					<input id="text_input" type="text" name="chat">
-					<input id="chat_button" type="button" value="Chat" onclick="chatBase.sendChat()">
+					<input id="chat_button" type="button" value="Chat">
 				</form>
-				<textarea id="chat_window" readonly="readonly"></textarea>
+				<textarea id="chat_window" readonly="readonly" tabindex = "-1"></textarea>
 				<div id="user_list">Users:</div>
 			</div>
 		</div>

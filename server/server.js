@@ -97,11 +97,13 @@ var serverStart = function() {
 	});
 };
 
+var questionDelay = 1000;
 var userList = {};
 var userCount = 0;
 var questionList = [];
 var fetchingAnswer = true;
 var currentQ = null;
+var currentQueue = [];
 var hatList = null;
 
 // BEGIN:: QUESTION FUNCTIONS
@@ -122,6 +124,17 @@ var getNewQuestion = function() {
 	
 	// If we have no question, grab one. If we alreay were on a question (and we just answered it) get the next one.
 	// TODO:: (JCW) Track a history of the last N questions and don't let us repeat a question in that time.
+	var qIndex = 0;
+	do {
+		qIndex = parseInt(Math.random() * qList.length);
+	}
+	while (currentQueue.indexOf(qIndex) != -1);
+	// Add it to the end, and remove the front if longer than 10 questions.
+	currentQueue.push(qIndex);
+	if (currentQueue >= 10) {
+		currentQueue.shift();
+	}
+	
 	var qIndex = parseInt(Math.random() * qList.length);
 	currentQ = qList[qIndex];
 	
@@ -139,11 +152,13 @@ var processAnswerAttempt = function(answer, theUser) {
 	// Then refresh all users, invalidate the question they have, pick a new one, and then show it.
 	
 	// TODO:: Have the answer checking parse math operations and better check than a simple string compare
+	var checkedAnswer = String(answer).toLowerCase();
 	var foundSolution = false;
 	var iter = 0;
 	var count = currentQ.a.length;
 	for (iter = 0; iter < count; ++iter) {
-		if (String(answer) == currentQ.a[iter]) {
+		var anAnswer = String(currentQ.a[iter]).toLowerCase();
+		if (checkedAnswer == anAnswer) {
 			foundSolution = true;
 		}
 		
@@ -175,8 +190,8 @@ var processAnswerAttempt = function(answer, theUser) {
 		// Update all the users to see who has what points.
 		updateUsers();
 		
-		// Wait 2 seconds, and then get a new question for the players
-		setTimeout(getNewQuestion, 2000);
+		// Wait x milliseconds, and then get a new question for the players
+		setTimeout(getNewQuestion, questionDelay);
 	}
 };
 // END:: QUESTION FUNCTIONS

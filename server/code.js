@@ -232,4 +232,56 @@ chatBase.handleError = function() {
 window.onload = function() {
 	// Show the welcome screen by default
 	$("#welcome").css("display", "block");
+	
+	// Username submission
+	$('#submitName').click( function(e) {
+		chatBase.connect();
+		e.preventDefault();
+		return false;
+	});
+	$('#username').keypress(function(e) {
+		var code = e.keyCode || e.which;
+		if (code == 13) {
+			chatBase.connect();
+			e.preventDefault();
+			return false;
+		}
+	});
+	
+	// Answer Submission
+	$('#submitAnswer').click( function(e) {
+		chatBase.submitAnswer();
+		e.preventDefault();
+		return false;
+	});
+	$('#answer').keypress(function(e) {
+		var code = e.keyCode || e.which;
+		if (code == 13) {
+			chatBase.submitAnswer();
+			e.preventDefault();
+			return false;
+		}
+	});
+	
+	// Chat submission
+	$('#chat_button').click( function(e) {
+		chatBase.sendChat();
+		e.preventDefault();
+		return false;
+	});
+	$('#text_input').keypress(function(e) {
+		var code = e.keyCode || e.which;
+		if (code == 13) {
+			chatBase.sendChat();
+			e.preventDefault();
+			return false;
+		}
+	});
+	
+	// Buy hats!
+	$('#buy_hat').click( function(e) {
+		chatBase.attemptBuy();
+		e.preventDefault();
+		return false;
+	});
 };

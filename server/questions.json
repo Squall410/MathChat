@@ -1,40 +1,215 @@
 {
     "name": "Questions",
-    "version": "1.0",
+    "version": "1.1",
     "list": [
 		{
 			"id": "00001",
 			"name": "Addition 1",
 			"q": "What is 1 + 1?",
-			"a": [ "2", "two", "TWO" ],
+			"a": [ "2", "two" ],
 			"val": 1
 		},
 		{
 			"id": "00002",
 			"name": "Addition 2",
-			"q": "What is 1 + 1?",
-			"a": [ "2", "two", "TWO" ],
+			"q": "What is 3 + 5?",
+			"a": [ "8", "eight" ],
 			"val": 1
 		},
 		{
 			"id": "00003",
 			"name": "Addition 3",
-			"q": "What is 1 + 1?",
-			"a": [ "2", "two", "TWO" ],
+			"q": "What is 6 + 5?",
+			"a": [ "11", "eleven" ],
 			"val": 1
 		},
 		{
 			"id": "00004",
 			"name": "Addition 4",
-			"q": "What is 1 + 1?",
-			"a": [ "2", "two", "TWO" ],
+			"q": "What is 11 + 3?",
+			"a": [ "14", "fourteen" ],
 			"val": 1
 		},
 		{
 			"id": "00005",
 			"name": "Addition 5",
-			"q": "What is 1 + 1?",
-			"a": [ "2", "two", "TWO" ],
+			"q": "What is 7 + 4?",
+			"a": [ "11", "eleven" ],
+			"val": 1
+		},
+		{
+			"id": "00006",
+			"name": "Addition 6",
+			"q": "What is 4 + 4?",
+			"a": [ "8", "eight" ],
+			"val": 1
+		},
+		{
+			"id": "00007",
+			"name": "Addition 7",
+			"q": "What is 3 + 12?",
+			"a": [ "15", "fifteen" ],
+			"val": 1
+		},
+		{
+			"id": "00008",
+			"name": "Addition 8",
+			"q": "What is 13 + 4?",
+			"a": [ "17", "seventeen" ],
+			"val": 1
+		},
+		{
+			"id": "00009",
+			"name": "Addition 9",
+			"q": "What is 12 + 1?",
+			"a": [ "13", "thirteen", "THIRTEEN" ],
+			"val": 1
+		},
+		{
+			"id": "00010",
+			"name": "Addition 10",
+			"q": "What is 14 + 4?",
+			"a": [ "18", "eighteen" ],
+			"val": 1
+		},
+		{
+			"id": "00011",
+			"name": "Subtraction 1",
+			"q": "What is 7 - 4?",
+			"a": [ "3", "three" ],
+			"val": 1
+		},
+		{
+			"id": "00012",
+			"name": "Subtraction 2",
+			"q": "What is 3 - 2?",
+			"a": [ "1", "one" ],
+			"val": 1
+		},
+		{
+			"id": "00013",
+			"name": "Subtraction 3",
+			"q": "What is 13 - 1?",
+			"a": [ "12", "twelve" ],
+			"val": 1
+		},
+		{
+			"id": "00014",
+			"name": "Subtraction 4",
+			"q": "What is 9 - 4?",
+			"a": [ "5", "five" ],
+			"val": 1
+		},
+		{
+			"id": "00015",
+			"name": "Subtraction 5",
+			"q": "What is 15 - 7?",
+			"a": [ "8", "eight" ],
+			"val": 1
+		},
+		{
+			"id": "00016",
+			"name": "Subtraction 6",
+			"q": "What is 12 - 4?",
+			"a": [ "8", "eight" ],
+			"val": 1
+		},
+		{
+			"id": "00017",
+			"name": "Subtraction 7",
+			"q": "What is 19 - 7?",
+			"a": [ "12", "twelve" ],
+			"val": 1
+		},
+		{
+			"id": "00018",
+			"name": "Subtraction 8",
+			"q": "What is 15 - 13?",
+			"a": [ "2", "two" ],
+			"val": 1
+		},
+		{
+			"id": "00019",
+			"name": "Subtraction 9",
+			"q": "What is 19 - 5?",
+			"a": [ "14", "fourteen" ],
+			"val": 1
+		},
+		{
+			"id": "00020",
+			"name": "Subtraction 10",
+			"q": "What is 13 - 7?",
+			"a": [ "6", "six" ],
+			"val": 1
+		},
+		{
+			"id": "00021",
+			"name": "Multiplication 1",
+			"q": "What is 1 * 1?",
+			"a": [ "1", "one" ],
+			"val": 1
+		},
+		{
+			"id": "00022",
+			"name": "Multiplication 2",
+			"q": "What is 7 * 1?",
+			"a": [ "7", "seven" ],
+			"val": 1
+		},
+		{
+			"id": "00023",
+			"name": "Multiplication 3",
+			"q": "What is 2 * 2?",
+			"a": [ "4", "four" ],
+			"val": 1
+		},
+		{
+			"id": "00024",
+			"name": "Multiplication 4",
+			"q": "What is 2 * 4?",
+			"a": [ "8", "eight" ],
+			"val": 1
+		},
+		{
+			"id": "00025",
+			"name": "Multiplication 5",
+			"q": "What is 5 * 2?",
+			"a": [ "10", "ten" ],
+			"val": 1
+		},
+		{
+			"id": "00026",
+			"name": "Multiplication 6",
+			"q": "What is 3 * 4?",
+			"a": [ "12", "twelve" ],
+			"val": 1
+		},
+		{
+			"id": "00027",
+			"name": "Multiplication 7",
+			"q": "What is 12 * 12?",
+			"a": [ "144", "One Hundred Fourty Four", "One Hundred and Fourty Four", "One Hundred Fourty-Four", "One Hundred and Fourty-Four", "gross", "a gross"],
+			"val": 1
+		},
+		{
+			"id": "00028",
+			"name": "Multiplication 8",
+			"q": "What is 4 * 2?",
+			"a": [ "8", "eight" ],
+			"val": 1
+		},
+		{
+			"id": "00029",
+			"name": "Multiplication 9",
+			"q": "What is 5 * 3?",
+			"a": [ "15", "fifteen" ],
+			"val": 1
+		},
+		{
+			"id": "00030",
+			"name": "Multiplication 10",
+			"q": "What is 7 * 2?",
+			"a": [ "14", "fourteen" ],
 			"val": 1
 		}
    ]
