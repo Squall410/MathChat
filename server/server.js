@@ -142,8 +142,9 @@ var processAnswerAttempt = function(answer, theUser) {
 	// Award the current player points if they answered correctly.
 	if (foundSolution === true) {
 		var addedPoints = (currentQ.val || 1);
-		theUser.points += addedPoints;
-		// Cap at 99 rupees, err, points.
+		theUser.points = (theUser.points || 0) + addedPoints;
+		theUser.xp = (theUser.xp || 0) + addedPoints;
+		// Cap at 99 rupees, err, points. XP is NOT capped.
 		if (theUser.points > 99) {
 			theUser.points = 99;
 		}
@@ -248,6 +249,9 @@ var processHatBuyAttempt = function(theUser) {
 		theUser.points -= currCost;
 		theUser.hat = newHat;
 		
+		// Updated stats mean we should check for new badges
+		updateUserBadges( theUser );
+		
 		if (theUser.socket != null) {
 			theUser.socket.emit("hatUpdate", { user: theUser.getUserData() });
 		}
@@ -272,10 +276,11 @@ var createNewUser = function(inputData, socket) {
 	var user = {
 		name: inputData.name,
 		points: 0,
+		xp: 0,
 		chat: 0,
 		hat: null,
 		socket: socket,
-		badges: [ ]
+		badges: {}
 	};
 	user.getUserData = function() {
 		return { name: this.name, points: this.points, hat: getHatNameByID(this.hat) };
@@ -438,7 +443,8 @@ var getFormattedBadgeByID = function(badgeID) {
 	for (; badgeIter < badgeCount; ++badgeIter) {
 		checkedBadge = badgeList[badgeIter];
 		if (checkedBadge != null && badgeID == checkedBadge.id) {
-			return "<td bgcolor='"+checkedBadge.color+"' title='"+checkedBadge.name+"'>&nbsp;</td>";
+			var titleText = checkedBadge.name + '\n' + checkedBadge.desc;
+			return "<td bgcolor='"+checkedBadge.color+"' title='"+titleText+"'>&nbsp;</td>";
 		}
 	}
 	
@@ -449,8 +455,33 @@ var getFormattedBadgeByID = function(badgeID) {
 var updateUserBadges = function( theUser ) {
 	var newBadgeAqcuired = false;
 	
-	// Look at our points/xp and chat and see what happens.
-	// TODO::
+	// Look through our points/xp and chat and see what happens.
+	var xpPoints = (theUser.xp || 0);
+	var chatPts = (theUser.chat || 0);
+	var hat = (theUser.hat || null);
+	
+	// Badges can be earned by having >= of xp or chat.
+	// or by having the correct hat.
+	// "xp": 125,
+	// "chat": 100
+	// "hat": "00008"
+	
+	var badgeIter = 0;
+	var badgeCount = badgeList.length;
+	var checkedBadge = null;
+	for (; badgeIter < badgeCount; ++badgeIter) {
+		checkedBadge = badgeList[badgeIter];
+		if ( checkedBadge != null &&
+			 theUser.badges[checkedBadge.id] == null &&
+			 checkedBadge.disabled != true &&
+			((checkedBadge.xp || 0) <= xpPoints) &&
+			((checkedBadge.chat || 0) <= chatPts) &&
+			((checkedBadge.hat == null) || (checkedBadge.hat == hat)) ) {
+			theUser.badges[checkedBadge.id] = 1;
+			console.log( "The user: " + theUser.name + " just got the badge: " + getBadgeNameByID(checkedBadge.id) );
+			newBadgeAqcuired = true;
+		}
+	}
 	
 	// If the user has updated badge credentials, let them know!
 	if (newBadgeAqcuired == true) {
@@ -460,7 +491,7 @@ var updateUserBadges = function( theUser ) {
 
 var sendUserBadges = function( theUser ) {
 	// Grab all user badge information, and format into an HTML blob
-	if (theUser.badges == null || theUser.badges.length == 0) {
+	if (theUser.badges == null) {
 		return;
 	}
 	
@@ -468,20 +499,19 @@ var sendUserBadges = function( theUser ) {
 	
 	htmlTable += "<caption>Badges</caption>";
 	
-	//theUser.badges: []
+	//theUser.badges: {}
 	var badgeTotal = 0;
-	var badgeIter = 0;
-	var badgeCount = theUser.badges.length;
-	var badgeID = 0;
+	var badgeID = null;
 	var tempBadge = null;
+	var titleText = null;
 	var columns = 5;
 	htmlTable += "<tr>";
-	for (; badgeIter < badgeCount; ++badgeIter) {
-		badgeID = theUser.badges[badgeIter];
+	for (badgeID in theUser.badges) {
 		tempBadge = getBadgeByID(badgeID);
 		if (tempBadge != null) {
 			++badgeTotal
-			htmlTable += "<td bgcolor='"+tempBadge.color+"' title='"+tempBadge.name+"'>&nbsp;</td>";
+			titleText = tempBadge.name + '\n' + tempBadge.desc;
+			htmlTable += "<td bgcolor='"+tempBadge.color+"' title='"+titleText+"'>&nbsp;</td>";
 			if (badgeTotal % (columns) == 0) {
 				if (badgeCount != badgeTotal) {
 					htmlTable += "</tr>";
@@ -493,7 +523,7 @@ var sendUserBadges = function( theUser ) {
 	htmlTable += "</tr>";
 	
 	// Then, send that blob to that user
-	if (theUser.socket != null) {
+	if (theUser.socket != null && badgeTotal > 0) {
 		console.log( "attmpting to emit badge update" );
 		theUser.socket.emit("badgeUpdate", { badgeList: htmlTable });
 	}

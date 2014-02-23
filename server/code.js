@@ -115,7 +115,14 @@ chatBase.onBadgeUpdate = function(data) {
 	// data:Object
 	// -- badgeList:String = HTML of your badges in table format
 	console.log("onBadgeUpdate: " + data);
-	$("#badges_table").html( data.badgeList );
+	
+	if (data != null && data.badgeList != null) {
+		if ($("#badges_table").css("display") == "none") {
+			$("#badges_table").css("display", "");
+		}
+		
+		$("#badges_table").html( data.badgeList );
+	}
 };
 
 chatBase.onUserUpdate = function(data) {
@@ -228,6 +235,7 @@ chatBase.handleError = function() {
 	chatBase.socket = null;
 	$("#welcome").css("display", "block");
 	$("#chatroom").css("display", "none");
+	$("#badges_table").css("display", "none");
 	
 	// Restart by focusing on the username entry field.
 	$('#username').focus();
@@ -249,6 +257,8 @@ chatBase.handleError = function() {
 window.onload = function() {
 	// Show the welcome screen by default
 	$("#welcome").css("display", "block");
+	$("#chatroom").css("display", "none");
+	$("#badges_table").css("display", "none");
 	
 	// Start by focusing on the username entry field.
 	$('#username').focus();
