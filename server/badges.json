@@ -1,0 +1,83 @@
+{
+    "name": "Badges",
+    "version": "1.0",
+    "list": [
+		{
+			"id": "00001",
+			"name": "Prince/Princess of Math-ing-ton",
+			"desc": "You too cool.",
+			"color": "0x0000FF",
+			"xp": 75
+		},
+		{
+			"id": "00002",
+			"name": "Baron/Baroness of Math-ing-ton",
+			"desc": "You too cool.",
+			"color": "0x0026DD",
+			"xp": 50
+		},
+		{
+			"id": "00003",
+			"name": "Bard of Math-ing-ton",
+			"desc": "You too cool.",
+			"color": "0x7F92FF",
+			"xp": 25
+		},
+		{
+			"id": "00004",
+			"name": "Newbie McNewberton",
+			"desc": "You just started this thing.",
+			"color": "0x222222",
+			"xp": 1
+		},
+		{
+			"id": "00005",
+			"name": "Chatty Cathy",
+			"desc": "You talk too much.",
+			"color": "0xFF7FB6",
+			"chat": 500
+		},
+		{
+			"id": "00006",
+			"name": "Sheriff of Subtraction",
+			"desc": "Better than Nottingham.",
+			"color": "0xFF6A00",
+			"xp": 100,
+			"chat": 100
+		},
+		{
+			"id": "00007",
+			"name": "Duke/Duchess of Numeracy",
+			"desc": "Better than Math-ing-ton.",
+			"color": "0x7F0000",
+			"xp": 125,
+			"chat": 100
+		},
+		{
+			"id": "00008",
+			"name": "Prince/Princess of Numeracy",
+			"desc": "Better than Math-ing-ton.",
+			"color": "0xFF0000",
+			"xp": 150,
+			"chat": 100
+		},
+		{
+			"id": "00009",
+			"name": "Victorious Viking of Vectors",
+			"desc": "Better than Math-ing-ton.",
+			"color": "0xB200FF"
+		},
+		{
+			"id": "00010",
+			"name": "Calculus Captain",
+			"desc": "Better than Math-ing-ton.",
+			"color": "0x000000"
+		},
+		{
+			"id": "00011",
+			"name": "Master Mathemetician",
+			"desc": "Better than Math-ing-ton.",
+			"color": "0x221111"
+		}
+   ]
+}

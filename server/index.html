@@ -20,6 +20,9 @@
 				font-weight: bold;
 				color: #000;
 			}
+			#hat_input {
+				float:left;
+			}
 			#chat_input {
 				width: 290px;
 				margin: 2px;
@@ -31,7 +34,7 @@
 				width: 20%
 			}
 			#chat_window {
-				width: 290px;
+				width: 300px;
 				height: 250px;
 				margin: 2px;
 				resize: none;
@@ -39,11 +42,27 @@
 				float:left;
 			}
 			#user_list {
+				width: 300px;
+				height: 250px;
 				margin: 2px;
+				resize: none;
+				overflow: scroll;
+				float:right;
 			}
-			table,th,td
+			table.user_table
 			{
 				padding:5px;
+			}
+			table.badges_table
+			{
+				font-size: 12px;
+				border:1px solid black;
+				padding:0px;
+			}
+			table.badges_table td
+			{
+				width: 50px;
+				height: 50px;
 			}
 		</style>
 	</head>
@@ -65,17 +84,23 @@
 			</div>
 			<div id="chatroom" style="display: none;">
 				<p>Welcome to MathChat!</p>
-				<p>Questions will appear and you can attempt to answer them to earn points!</p>
-				<p>Feel free to chat with fellow users as well.</p>
-				<table>
+				<p>Questions will appear and you can attempt to answer them to earn points!
+				   </br>Feel free to chat with fellow users as well.</p>
+				<table class="user_table">
 					<tr>
 						<td id="display_name">User:</td>
-						<td id="display_hat"></td>
+					</tr>
+					<tr>
 						<td>
 							<form id="hat_input" name="hat_input">
 								<input id="buy_hat" type="button" value="Buy Hat">
 							</form>
 						</td>
+						<td id="display_hat"></td>
+					</tr>
+					<tr>
+						<table class="badges_table" id="badges_table">
+						</table>
 					</tr>
 				</table>
 				<hr/>
@@ -89,12 +114,21 @@
 					<input id="submitAnswer" type="button" value="Submit">
 				</form>
 				<hr/>
-				<form id="chat_input" name="chat_input">
-					<input id="text_input" type="text" name="chat">
-					<input id="chat_button" type="button" value="Chat">
-				</form>
-				<textarea id="chat_window" readonly="readonly" tabindex = "-1"></textarea>
-				<div id="user_list">Users:</div>
+				<table>
+					<tr>
+						<td>
+							<form id="chat_input" name="chat_input">
+								<input id="text_input" type="text" name="chat">
+								<input id="chat_button" type="button" value="Chat">
+							</form>
+						</td>
+						<td id="user_header">Users:</td>
+					</tr>
+					<tr>
+						<td><textarea id="chat_window" readonly="readonly" tabindex="-1"></textarea></td>
+						<td><textarea id="user_list" readonly="readonly" tabindex="-1" wrap="off"></textarea></td>
+					</tr>
+				</table>
 			</div>
 		</div>
 	</body>

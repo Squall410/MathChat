@@ -1,42 +1,55 @@
 {
     "name": "Hats",
-    "version": "1.0",
+    "version": "1.1",
     "list": [
 		{
 			"id": "00001",
-			"name": "not-very-good rag cap of math-ing.",
+			"name": "Not-Very-Good Rag Cap of Math-ing.",
+			"desc": "It looks funky.",
 			"cost": 5,
 			"requires": null
 		},
 		{
 			"id": "00002",
-			"name": "slightly-better rag cap of math-ing.",
+			"name": "Slightly-Better Rag Cap of Math-ing.",
 			"cost": 10,
 			"requires": { "00001":1 }
 		},
 		{
 			"id": "00003",
-			"name": "acceptable hat of math-ing.",
+			"name": "Acceptable Hat of Math-ing.",
 			"cost": 25,
 			"requires": { "00001":1, "00002":1 }
 		},
 		{
 			"id": "00004",
-			"name": "hat of math-ing.",
+			"name": "Hat of Math-ing.",
 			"cost": 40,
 			"requires": { "00003":1 }
 		},
 		{
 			"id": "00005",
-			"name": "pretty-good hat of math-ing.",
+			"name": "Pretty-GoodHat of Math-ing.",
 			"cost": 50,
 			"requires": { "00003":1, "00004":1 }
 		},
 		{
 			"id": "00006",
-			"name": "amazing hat of math-ing lore.",
+			"name": "Pretty-GoodHat of Math-ing.",
+			"cost": 60,
+			"requires": { "00003":1, "00004":1, "00005":1 }
+		},
+		{
+			"id": "00007",
+			"name": "Amazing Hat of Math-ing Lore.",
 			"cost": 99,
-			"requires": { "00005":1 }
+			"requires": { "00005":1, "00006":1 }
+		},
+		{
+			"id": "00008",
+			"name": "Math Wizard Hat (and Robe).",
+			"cost": 99,
+			"requires": { "00006":1, "00007":1 }
 		}
    ]
 }

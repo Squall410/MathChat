@@ -4,6 +4,7 @@ var path = require('path');								// Helps with file paths
 var fs = require('fs');									// The filesystem reference
 var questionFile = require('./questions.json');
 var hatFile = require('./hats.json');
+var badgeFile = require('./badges.json');
 
 app.listen(8335);
 
@@ -51,6 +52,9 @@ var serverStart = function() {
 	// Prime the hat data system
 	primeHatRack();
 	
+	// Prime the badge data system
+	primeBadgePack();
+	
 	// NOTE:: (JCW) Set the SocketIO listeners to know when a user connects
 	// 			This fires for 'reconnect' events as well.
 	// TODO:: HANDLE RECONNECT EVENTS (have a timeout on disconnect before you remove a user.)
@@ -60,39 +64,8 @@ var serverStart = function() {
 			console.log(data);
 			
 			var newUser = createNewUser(data, socket);
-			socket.on('requestUpdate', function() {
-				var htmlList = askForUserUpdate();
-				socket.emit("userUpdate", { userlist: htmlList });
-				
-			});
-			socket.on('disconnect', function () {
-				// TODO:: Use a timeout before removal. If the user connects again in that time, keep them alive.
-				removeUser( newUser );
-				userLeftRoom( newUser );
-			});
-			socket.on('submitAnswer', function(data) {
-				// data:Object
-				//	- answer:String = The answer the user is trying to compare
-				console.log( data );
-				
-				socket.emit('receivedAnswer', {});
-				if (currentQ != null && fetchingAnswer === false) {
-					processAnswerAttempt( data.answer, newUser );
-				}
-				
-			});
-			socket.on('attemptBuy', function() {
-				processHatBuyAttempt( newUser );
-			});
-			socket.on('sendChat', function(data) {
-				receivedChatText( newUser, data );
-			});
-			socket.emit('welcome', { user: newUser.getUserData() });
-			userEnteredRoom( newUser );
-			// If we have a question, send the Q part to the user
-			if (currentQ != null) {
-				socket.emit("newQuestion", { name: currentQ.name, q: currentQ.q });
-			}
+			updateAllUsers();
+			sendTheWelcomeWagon( newUser );
 		});
 	});
 };
@@ -105,6 +78,7 @@ var fetchingAnswer = true;
 var currentQ = null;
 var currentQueue = [];
 var hatList = null;
+var badgeList = null;
 
 // BEGIN:: QUESTION FUNCTIONS
 var getNewQuestion = function() {
@@ -131,11 +105,9 @@ var getNewQuestion = function() {
 	while (currentQueue.indexOf(qIndex) != -1);
 	// Add it to the end, and remove the front if longer than 10 questions.
 	currentQueue.push(qIndex);
-	if (currentQueue >= 10) {
+	if (currentQueue.length >= 10) {
 		currentQueue.shift();
 	}
-	
-	var qIndex = parseInt(Math.random() * qList.length);
 	currentQ = qList[qIndex];
 	
 	if (currentQ == null || currentQ.name == null || currentQ.q == null) {
@@ -179,6 +151,9 @@ var processAnswerAttempt = function(answer, theUser) {
 		fetchingAnswer = true;
 		currentQ = null;
 		
+		// Updated stats mean we should check for new badges
+		updateUserBadges( theUser );
+		
 		// Update the user that got the points. Maybe they can now buy a hat?
 		if (theUser.socket != null) {
 			theUser.socket.emit("hatUpdate", { user: theUser.getUserData() });
@@ -188,7 +163,7 @@ var processAnswerAttempt = function(answer, theUser) {
 		io.sockets.emit("answerFound", { name: theUser.name, answer: answer, value: addedPoints });
 		
 		// Update all the users to see who has what points.
-		updateUsers();
+		updateAllUsers();
 		
 		// Wait x milliseconds, and then get a new question for the players
 		setTimeout(getNewQuestion, questionDelay);
@@ -215,7 +190,7 @@ var primeHatRack = function() {
 	// Sort the list by decreasing cost in case it isn't already done so.
 	hatList.sort( function(a, b) {
 		return (a.cost || 0) - (b.cost || 0);
-	})
+	});
 };
 
 var getHatNameByID = function(hatID) {
@@ -278,7 +253,7 @@ var processHatBuyAttempt = function(theUser) {
 		}
 		
 		// Let everyone else know how awesome you are...
-		updateUsers();
+		updateAllUsers();
 	}
 };
 // END:: HAT FUNCTIONS
@@ -287,13 +262,20 @@ var processHatBuyAttempt = function(theUser) {
 var createNewUser = function(inputData, socket) {
 	// inputData:Object
 	// - name:String
+	// socket:socket.io socket
+	if (inputData == null || socket == null) {
+		return;
+	}
+	
 	console.log( "createNewUser: " + inputData.name );
 	// Create an empty user
 	var user = {
 		name: inputData.name,
 		points: 0,
+		chat: 0,
 		hat: null,
-		socket: socket
+		socket: socket,
+		badges: [ ]
 	};
 	user.getUserData = function() {
 		return { name: this.name, points: this.points, hat: getHatNameByID(this.hat) };
@@ -312,7 +294,35 @@ var createNewUser = function(inputData, socket) {
 	++userCount;
 	console.log( "Created user with name: " + user.name );
 	
-	updateUsers();
+	// Setup the socket listeners
+	socket.on('requestUpdate', function() {
+		var htmlList = askForUserUpdate();
+		socket.emit("userUpdate", { userlist: htmlList });
+		
+	});
+	socket.on('disconnect', function () {
+		// TODO:: Use a timeout before removal. If the user connects again in that time, keep them alive.
+		removeUser( user );
+		userLeftRoom( user );
+	});
+	socket.on('submitAnswer', function(data) {
+		// data:Object
+		//	- answer:String = The answer the user is trying to compare
+		console.log( data );
+		
+		socket.emit('receivedAnswer', {});
+		if (currentQ != null && fetchingAnswer === false) {
+			processAnswerAttempt( data.answer, user );
+		}
+		
+	});
+	socket.on('attemptBuy', function() {
+		processHatBuyAttempt( user );
+	});
+	socket.on('sendChat', function(data) {
+		receivedChatText( user, data );
+	});
+	
 	return user;
 };
 
@@ -321,7 +331,7 @@ var removeUser = function(user) {
 		console.log( "Removed user: " + user.name );
 		delete userList[user.name];
 		--userCount;
-		updateUsers();
+		updateAllUsers();
 		return;
 	}
 	throw new Error( "Failed to remove the user: " + user.name );
@@ -334,20 +344,161 @@ var askForUserUpdate = function() {
 	for ( key in userList ) {
 		tempUser = userList[key];
 		htmlList += tempUser.name;
+		htmlList += '(' + tempUser.points + ' pts)';
 		if (tempUser.hat !== null) {
-			htmlList += ' <small>wearing</small> ' + getHatNameByID(tempUser.hat);
+			htmlList += ' wearing ' + getHatNameByID(tempUser.hat);
 		}
-		htmlList += ' <small>(' + tempUser.points + ' points)</small><br/>';
+		htmlList += '\n';
 	}
 	return htmlList;
 };
 
-var updateUsers = function() {
-	console.log( "updateUsers count: " + userCount );
+var updateAllUsers = function() {
+	console.log( "updateAllUsers count: " + userCount );
 	var htmlList = askForUserUpdate();
 	io.sockets.emit("userUpdate", { userlist: htmlList });
 };
+
+var sendTheWelcomeWagon = function( theUser ) {
+	theUser.socket.emit('welcome', { user: theUser.getUserData() });
+	userEnteredRoom( theUser );
+	sendUserBadges( theUser );
+	// If we have a question, send the Q part to the user
+	if (currentQ != null) {
+		theUser.socket.emit("newQuestion", { name: currentQ.name, q: currentQ.q });
+	}
+}
 // END:: USER FUNCTIONS
+
+// BEGIN:: BADGE FUNCTIONS
+var primeBadgePack = function() {
+	if ( (typeof badgeFile === "undefined") || (badgeFile === null) ) {
+		throw new Error( "No badge data file exists! Problem with server!" );
+		return;
+	}
+	badgeList = badgeFile.list;
+	if( Object.prototype.toString.call( badgeList ) !== '[object Array]' ) {
+		throw new Error( "Badge data file list does not exist! Problem with server!" );
+		return;
+	}
+	if ( badgeList.length <= 0 ) {
+		throw new Error( "Badge data file list does not exist! Problem with server!" );
+		return;
+	}
+	
+	// If we need to do other badge processing, it should go here.
+};
+
+var getBadgeByID = function(badgeID) {
+	if (badgeID == null || badgeID == "") {
+		return null;
+	}
+	
+	var badgeIter = 0;
+	var badgeCount = badgeList.length;
+	var checkedBadge = null;
+	for (; badgeIter < badgeCount; ++badgeIter) {
+		checkedBadge = badgeList[badgeIter];
+		if (checkedBadge != null && badgeID == checkedBadge.id) {
+			return checkedBadge;
+		}
+	}
+	
+	// This badge doesn't exist!
+	return null;
+};
+
+var getBadgeNameByID = function(badgeID) {
+	if (badgeID == null || badgeID == "") {
+		return null;
+	}
+	
+	var badgeIter = 0;
+	var badgeCount = badgeList.length;
+	var checkedBadge = null;
+	for (; badgeIter < badgeCount; ++badgeIter) {
+		checkedBadge = badgeList[badgeIter];
+		if (checkedBadge != null && badgeID == checkedBadge.id) {
+			return checkedBadge.name;
+		}
+	}
+	
+	// This badge shouldn't be attainable
+	return "unknown badge";
+};
+
+var getFormattedBadgeByID = function(badgeID) {
+	if (badgeID == null || badgeID == "") {
+		return null;
+	}
+	
+	var badgeIter = 0;
+	var badgeCount = badgeList.length;
+	var checkedBadge = null;
+	for (; badgeIter < badgeCount; ++badgeIter) {
+		checkedBadge = badgeList[badgeIter];
+		if (checkedBadge != null && badgeID == checkedBadge.id) {
+			return "<td bgcolor='"+checkedBadge.color+"' title='"+checkedBadge.name+"'>&nbsp;</td>";
+		}
+	}
+	
+	// This badge shouldn't be attainable
+	return "";
+};
+
+var updateUserBadges = function( theUser ) {
+	var newBadgeAqcuired = false;
+	
+	// Look at our points/xp and chat and see what happens.
+	// TODO::
+	
+	// If the user has updated badge credentials, let them know!
+	if (newBadgeAqcuired == true) {
+		sendUserBadges( theUser );
+	}
+};
+
+var sendUserBadges = function( theUser ) {
+	// Grab all user badge information, and format into an HTML blob
+	if (theUser.badges == null || theUser.badges.length == 0) {
+		return;
+	}
+	
+	var htmlTable = "";
+	
+	htmlTable += "<caption>Badges</caption>";
+	
+	//theUser.badges: []
+	var badgeTotal = 0;
+	var badgeIter = 0;
+	var badgeCount = theUser.badges.length;
+	var badgeID = 0;
+	var tempBadge = null;
+	var columns = 5;
+	htmlTable += "<tr>";
+	for (; badgeIter < badgeCount; ++badgeIter) {
+		badgeID = theUser.badges[badgeIter];
+		tempBadge = getBadgeByID(badgeID);
+		if (tempBadge != null) {
+			++badgeTotal
+			htmlTable += "<td bgcolor='"+tempBadge.color+"' title='"+tempBadge.name+"'>&nbsp;</td>";
+			if (badgeTotal % (columns) == 0) {
+				if (badgeCount != badgeTotal) {
+					htmlTable += "</tr>";
+					htmlTable += "<tr>";
+				}
+			}
+		}
+	}
+	htmlTable += "</tr>";
+	
+	// Then, send that blob to that user
+	if (theUser.socket != null) {
+		console.log( "attmpting to emit badge update" );
+		theUser.socket.emit("badgeUpdate", { badgeList: htmlTable });
+	}
+};
+// END:: BADGE FUNCTIONS
 
 // BEGIN:: CHAT FUNCTIONS
 var receivedChatText = function( theUser, data ) {
@@ -355,6 +506,12 @@ var receivedChatText = function( theUser, data ) {
 	// data:Object
 	// - text:String = The chat string that was just entered.
 	console.log( "receivedChatText: " + data.text );
+	
+	// Update the users' chat values
+	theUser.chat = (theUser.chat || 0) + 1;
+	
+	// Updated stats mean we should check for new badges
+	updateUserBadges( theUser );
 	
 	// NOTE:: Should we filter curse words/log this?
 	

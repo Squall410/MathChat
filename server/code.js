@@ -45,6 +45,7 @@ chatBase.onConnect = function() {
 	
 	// Setup the functional listeners
 	chatBase.socket.on('welcome', chatBase.onWelcome);
+	chatBase.socket.on('badgeUpdate', chatBase.onBadgeUpdate);
 	chatBase.socket.on('hatUpdate', chatBase.onHatUpdate);
 	chatBase.socket.on('userUpdate', chatBase.onUserUpdate);
 	chatBase.socket.on('receivedAnswer', chatBase.onReceivedAnswer);
@@ -81,15 +82,15 @@ chatBase.onWelcome = function(data) {
 	chatBase.updateHatButton( data.user.points );
 };
 
-chatBase.updateHatButton = function(points) {
+chatBase.updateHatButton = function( points, currentHat ) {
 	points = (points || 0);
 	
 	// This is 5 just because we know the lowest value hat costs that much. Update if that changes.
-	if (points < 5) {
-		$("#hat_input").css("display", "none");
+	if (points >= 5 || currentHat != null) {
+		$("#hat_input").css("display", "block");
 	}
 	else {
-		$("#hat_input").css("display", "block");
+		$("#hat_input").css("display", "none");
 	}
 };
 
@@ -107,14 +108,21 @@ chatBase.onHatUpdate = function(data) {
 		$("#display_hat").html( '<small>wearing</small> ' + data.user.hat );
 	}
 	
-	chatBase.updateHatButton( data.user.points );
-}
+	chatBase.updateHatButton( data.user.points, data.user.hat );
+};
+
+chatBase.onBadgeUpdate = function(data) {
+	// data:Object
+	// -- badgeList:String = HTML of your badges in table format
+	console.log("onBadgeUpdate: " + data);
+	$("#badges_table").html( data.badgeList );
+};
 
 chatBase.onUserUpdate = function(data) {
 	// data:Object
 	// -- userlist:String = HTML of connected users
 	console.log("onUserUpdate: " + data);
-	$("#user_list").html( "Users:<br/>" + data.userlist );
+	$("#user_list").val( data.userlist );
 };
 
 chatBase.onReceivedAnswer = function(data) {
@@ -164,6 +172,7 @@ chatBase.submitAnswer = function() {
 	answerField.prop("disabled", true);
 	chatBase.socket.emit('submitAnswer', { answer: attempt });
 };
+
 chatBase.attemptBuy = function() {
 	console.log( "Attempting to buy a hat!" );
 	
@@ -203,6 +212,7 @@ chatBase.handleError = function() {
 	console.log( "Got an error" );
 	chatBase.socket.removeListener('connect', chatBase.onConnect);
 	chatBase.socket.removeListener('welcome', chatBase.onWelcome);
+	chatBase.socket.removeListener('badgeUpdate', chatBase.onBadgeUpdate);
 	chatBase.socket.removeListener('hatUpdate', chatBase.onHatUpdate);
 	chatBase.socket.removeListener('userUpdate', chatBase.onUserUpdate);
 	chatBase.socket.removeListener('receivedAnswer', chatBase.onReceivedAnswer);
@@ -219,9 +229,16 @@ chatBase.handleError = function() {
 	$("#welcome").css("display", "block");
 	$("#chatroom").css("display", "none");
 	
+	// Restart by focusing on the username entry field.
+	$('#username').focus();
+	
 	// Make sure to wipe chat if we got an error.
 	$("#chat_window").val("");
+	$("#chat_input").val("");
 	$("#correct_user").val("");
+	$("#display_hat").html("");
+	$("#badges_table").html("");
+	$("#user_list").val("");
 	
 	var nameField = $("#name_input :input[name='username']");
 	nameField.prop("disabled", false);
@@ -232,6 +249,9 @@ chatBase.handleError = function() {
 window.onload = function() {
 	// Show the welcome screen by default
 	$("#welcome").css("display", "block");
+	
+	// Start by focusing on the username entry field.
+	$('#username').focus();
 	
 	// Username submission
 	$('#submitName').click( function(e) {
