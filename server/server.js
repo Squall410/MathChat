@@ -6,7 +6,10 @@ var questionFile = require('./questions.json');
 var hatFile = require('./hats.json');
 var badgeFile = require('./badges.json');
 
-app.listen(8335);
+// NOTE:: (JCW) PORT 80 is the Nodejitsu default, so just use that for local testing as well.
+var PORT = 80;
+
+app.listen(PORT);
 
 var DEBUG = true;
 
@@ -166,8 +169,13 @@ var processAnswerAttempt = function(answer, theUser) {
 		// Update all the users to see who has what points.
 		updateAllUsers();
 		
-		// Wait x milliseconds, and then get a new question for the players
-		setTimeout(getNewQuestion, questionDelay);
+		// In debug, wait x milliseconds, and then get a new question for the players
+		if (DEBUG === true) {
+			setTimeout(getNewQuestion, questionDelay);
+		}
+		else {
+			getNewQuestion();
+		}
 	}
 };
 // END:: QUESTION FUNCTIONS

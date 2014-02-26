@@ -1,5 +1,7 @@
 var DEBUG = true;
 
+var LOCAL_HOST = false;
+
 if (DEBUG !== true) {
 	console = {};
 	console.log = function(){};
@@ -31,7 +33,12 @@ chatBase.connect = function() {
 	nameField.val("");
 	
 	// Otherwise, log into the system
-	chatBase.socket = io.connect('http://localhost:8335', {'force new connection': true} );
+	if (LOCAL_HOST === true) {
+		chatBase.socket = io.connect('http://localhost:80', {'force new connection': true} );
+	}
+	else {
+		chatBase.socket = io.connect('http://mathchat.nodejitsu.com:80', {'force new connection': true} );
+	}
 	chatBase.socket.on('connect', chatBase.onConnect);
 	// These are for handling connection error cases.
 	chatBase.socket.on('connect_failed', chatBase.handleError);
